@@ -35,15 +35,14 @@ static uint64_t s_watchdog_count = 0;
 static uint64_t s_last_msg_sent  = 0;
 static uint64_t s_last_wakeup    = 0;
 
-// WDT Interrupt Need some code for coming out of sleep.
-// but is does not need to do anything! (just exist).
-ISR(WDT_vect) 
+// WDT Interrupt needs some code for coming out of sleep-- it just needs to exist...
+ISR( WDT_vect ) 
 {
 }
 
 
 // Enters the arduino into sleep mode.
-void enterSleep(void)
+void enterSleep()
 {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
@@ -94,7 +93,7 @@ void setup()
 }
 
 
-void delayLoop(int del) 
+void delayLoop( int del ) 
 { 
   delay( del );
 }
@@ -176,7 +175,7 @@ void loop()
  
     delayLoop( 1500 );
 
-    // wait for the ESP32 to send a txt message, the ESP32 will bring the probe pin low to let us know it's done...
+    // wait for the ESP32 to send a txt message, the ESP32 will bring the message pin high to let us know it's done...
     wait_for_esp32_message_pin_high();
 
     // turn off ESP32 before sleeping
