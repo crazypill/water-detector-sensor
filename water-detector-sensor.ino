@@ -22,7 +22,7 @@
 #define k_notification_timeout_secs   16
 #define k_battery_check_interval_secs 32
 #else
-#define k_notification_timeout_secs    7200 // notify every 2 hours until water level goes low
+#define k_notification_timeout_secs    3600 // notify every hour until water level goes low
 #define k_battery_check_interval_secs 86400 // check battery every 24 hours
 #endif
 
