@@ -16,13 +16,13 @@
 #define k_sleep_interval_secs 8
 
 // define this to wait far less for the timeouts and battery checks
-#define DEBUG_INTERVALS
+//#define DEBUG_INTERVALS
 
 #ifdef DEBUG_INTERVALS
 #define k_notification_timeout_secs   16
 #define k_battery_check_interval_secs 32
 #else
-#define k_notification_timeout_secs   43200 // notify every twelve hours until water level goes low
+#define k_notification_timeout_secs    7200 // notify every 2 hours until water level goes low
 #define k_battery_check_interval_secs 86400 // check battery every 24 hours
 #endif
 
@@ -99,6 +99,7 @@ void delayLoop( int del )
 }
 
 
+// !!@ not sure what this entrypoint is for
 void _loop() 
 {
   // Re-enter sleep mode.
@@ -141,17 +142,21 @@ void loop()
 
   if( water_sensor_reading && !s_last_msg_sent )
   {
-    // set the message line high to indicate that this is a water high message
-    digitalWrite( MESSAGE_PIN, HIGH );
-    
+    // set ESP32 will look at the probe line-- high to indicate that this is a water high message (low battery check)
+    pinMode( MESSAGE_PIN, OUTPUT );
+    digitalWrite( MESSAGE_PIN, LOW );
+    pinMode( MESSAGE_PIN, INPUT ); // leave as input
+
     // turn on power to the ESP32
     digitalWrite( ESP_POWER_PIN, HIGH );
  
-    delayLoop( 1500 );
+    delayLoop( 500 );
 
-    // wait for the ESP32 to send a txt message, the ESP32 will bring the probe pin low to let us know it's done...
-    wait_for_esp32_probe_pin_low();
+    // wait for the ESP32 to send a txt message, the ESP32 will bring the message pin high to let us know it's done...
+    wait_for_esp32_message_pin_high();
 
+    // turn off ESP32 before sleeping
+    digitalWrite( ESP_POWER_PIN, LOW );
    
     s_last_msg_sent = s_watchdog_count;
   }
@@ -167,20 +172,20 @@ void loop()
   if( s_watchdog_count > s_last_wakeup + k_battery_check_interval )
   {
     // turn on ESP32 and tell it to check battery
+    pinMode( MESSAGE_PIN, OUTPUT );
     digitalWrite( MESSAGE_PIN, LOW );
-    pinMode( MESSAGE_PIN, INPUT );
+    pinMode( MESSAGE_PIN, INPUT ); // leave as input
 
     // turn on power to the ESP32
     digitalWrite( ESP_POWER_PIN, HIGH );
  
-    delayLoop( 1500 );
+    delayLoop( 500 );
 
     // wait for the ESP32 to send a txt message, the ESP32 will bring the message pin high to let us know it's done...
     wait_for_esp32_message_pin_high();
 
     // turn off ESP32 before sleeping
     digitalWrite( ESP_POWER_PIN, LOW );
-    pinMode( MESSAGE_PIN, OUTPUT );
     
     // update wakeup
     s_last_wakeup = s_watchdog_count;
@@ -189,7 +194,7 @@ void loop()
    
     // turn off ESP32 before sleeping
     digitalWrite( ESP_POWER_PIN, LOW );
-    digitalWrite( MESSAGE_PIN, LOW );
+//    digitalWrite( MESSAGE_PIN, LOW );
 
 //  pinMode( ESP_POWER_PIN, INPUT_PULLUP ); 
 //  pinMode( PROBE_PIN, INPUT_PULLUP); 
@@ -202,3 +207,6 @@ void loop()
 //  pinMode( ESP_POWER_PIN, OUTPUT ); 
 //  pinMode( MESSAGE_PIN, OUTPUT );
 }
+
+
+// EOF
